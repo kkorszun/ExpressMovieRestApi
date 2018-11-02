@@ -3,15 +3,73 @@ var bodyParser = require('body-parser')
 const app = express()
 const port = 3000
 
+var mockDb = [];
+
+var mockIdGen = (function(){
+    var counter = 0;
+    return function() {
+        counter += 1;
+        return counter;
+    }
+})();
+
+function getComments(id, callback) {
+    callback(null, [])
+}
+
+function getAllComments(callback) {
+    callback(null, [])
+}
+
+function addMovie(title, callback) {
+    const movieObj = {id : mockIdGen(),  movie: { title : title}};
+    mockDb.push(movieObj);
+    callback(null, movieObj);
+}
+
+function getAllMovies(callback) {
+    callback(null, mockDb);
+}
+
+function getMovie(id, callback) {
+    const result = mockDb.filter(x => x.id == id);
+    callback(null, result);
+}
+
 app.use(bodyParser.json())
 
-app.get('/movies', (req, res) => res.send('All movies are here'))
-app.get('/comments/:id(\\d+)', (req, res) => res.send(`All comments for ${req.params.id} movie are here`))
-app.get('/comments', (req, res) => res.send('All comments are here'))
+app.get('/movies', (req, res) => getAllMovies((err,data) => {
+    if(err) {
+        res.sendStatus(500);
+    } else{
+        res.json(data);
+    }
+}))
+
+app.get('/comments/:id(\\d+)', (req, res) => {
+    getComments(req.body.title, (err, data) => {
+        if(err) {
+            //...
+        } else res.json(data)
+    })
+})
+
+app.get('/comments', (req, res) =>{
+    getAllComments((err, data) => {
+        if(err) { /* ... */} else res.json(data)
+    })
+})
 
 app.post('/movies', (req, res) => {
     if(req.body.title) {
-        res.send(JSON.stringify(req.body))
+        addMovie(req.body.title, (err, data) => {
+            if(err) {
+                res.sendStatus(500)
+            } else {
+                res.json(data)
+            }
+        }) 
+        
     } else{
         res.sendStatus(400)
     }    
@@ -19,7 +77,7 @@ app.post('/movies', (req, res) => {
 
 app.post('/comments', (req, res) => {
     if(req.body.id && req.body.comment) {
-        res.send(JSON.stringify(req.body))
+        res.json(req.body)
     } else{
         res.sendStatus(400)
     }    
