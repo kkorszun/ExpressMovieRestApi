@@ -5,9 +5,20 @@ Simple REST API in Express.js
 * [Description](#description)
 * [Technologies](#technologies)
 * [Usage](#usage)
-* [Installation](#installation)
 ## Description ##
- ...
+REST API - database interacting with external API.
+ROUTES :
+
+__POST /movies__ -  Request body contains only movie title. Based on passed title, other movie details are fetched from external base and saved to application database.
+
+__GET /movies__ - Serve list of all movies already present in application database.
+
+__POST /comments__  - Request contains ID of movie already present in database, and comment text body. Comment is saved to application database and returned in request response.
+
+__GET /comments__ - Serve list of all comments present in application database.
+
+__GET /comments/:id__ - Serve list of comments associated with given movie id.
+
 
 ## Technologies ##
 * [Node.js](https://nodejs.org/) - application  server
