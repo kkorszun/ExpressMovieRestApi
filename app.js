@@ -1,13 +1,17 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+require('dotenv').config();
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
+const monogoAddress = 'mongodb://localhost/moviesDb';
+// const myUrl = `http://www.omdbapi.com/?i=tt3896198&apikey=${process.env.API_KEY}`;
 
-mongoose.connect('mongodb://localhost/moviesDb');
+mongoose.connect(monogoAddress);
 const Movie = mongoose.model('Movie', { Title: String });
 const Comment = mongoose.model('Comment', { Movie: String, Text: String });
+
 
 function getComments(id, callback) {
   Comment.find({ Movie: id }, callback);
