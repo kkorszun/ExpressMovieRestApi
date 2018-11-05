@@ -29,9 +29,9 @@ function getAllMovies(callback) {
   Movie.find(callback);
 }
 
-function getMovie(id, callback) {
+/* function getMovie(id, callback) {
   Movie.findById(id, callback);
-}
+} */
 
 app.use(bodyParser.json());
 
@@ -87,4 +87,5 @@ app.post('/comments', (req, res) => {
 });
 
 
+// eslint-disable-next-line no-console
 app.listen(port, () => console.log(`App listening on port ${port}!`));
