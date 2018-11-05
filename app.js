@@ -1,41 +1,37 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const app = express();
 const port = 3000;
 
-const mockDb = [];
-
-const mockIdGen = (function () {
-  let counter = 0;
-  return function () {
-    counter += 1;
-    return counter;
-  };
-}());
+mongoose.connect('mongodb://localhost/moviesDb');
+const Movie = mongoose.model('Movie', { Title: String });
+const Comment = mongoose.model('Comment', { Movie: String, Text: String });
 
 function getComments(id, callback) {
-  callback(null, []);
+  Comment.find({ Movie: id }, callback);
 }
 
 function getAllComments(callback) {
-  callback(null, []);
+  Comment.find(callback);
 }
 
 function addMovie(title, callback) {
-  const movieObj = { id: mockIdGen(), movie: { title } };
-  mockDb.push(movieObj);
-  callback(null, movieObj);
+  Movie.create({ Title: title }, callback);
+}
+
+function addComment(movie, text, callback) {
+  Comment.create({ Movie: movie, Text: text }, callback);
 }
 
 function getAllMovies(callback) {
-  callback(null, mockDb);
+  Movie.find(callback);
 }
 
-/* function getMovie(id, callback) {
-  const result = mockDb.filter(x => x.id === id);
-  callback(null, result);
-} */
+function getMovie(id, callback) {
+  Movie.findById(id, callback);
+}
 
 app.use(bodyParser.json());
 
@@ -47,8 +43,8 @@ app.get('/movies', (req, res) => getAllMovies((err, data) => {
   }
 }));
 
-app.get('/comments/:id(\\d+)', (req, res) => {
-  getComments(req.body.title, (err, data) => {
+app.get('/comments/:id', (req, res) => {
+  getComments(req.params.id, (err, data) => {
     if (err) {
       // ...
     } else res.json(data);
@@ -77,7 +73,14 @@ app.post('/movies', (req, res) => {
 
 app.post('/comments', (req, res) => {
   if (req.body.id && req.body.comment) {
-    res.json(req.body);
+    // res.json(req.body);
+    addComment(req.body.id, req.body.comment, (err, data) => {
+      if (err) {
+        res.sendStatus(500);
+      } else {
+        res.json(data);
+      }
+    });
   } else {
     res.sendStatus(400);
   }

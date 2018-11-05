@@ -19,7 +19,8 @@
   "homepage": "https://github.com/kkorszun/ExpressMovieRestApi#readme",
   "dependencies": {
     "body-parser": "^1.18.3",
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "mongoose": "^5.3.9"
   },
   "devDependencies": {
     "eslint": "^5.8.0",
