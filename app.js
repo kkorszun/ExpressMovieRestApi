@@ -27,8 +27,8 @@ function buildDbAddress() {
 const monogoAddress = buildDbAddress() || 'mongodb://localhost/moviesDb';
 
 mongoose.connect(monogoAddress);
-const Movie = mongoose.model('Movie', { Title: String, Year: String });
-const Comment = mongoose.model('Comment', { Movie: String, Text: String });
+const Movie = mongoose.model('Movie', { movie: Object });
+const Comment = mongoose.model('Comment', { movie_id: String, text: String });
 
 
 function getComments(id, callback) {
@@ -47,8 +47,8 @@ function addMovie(title, callback) {
       if (err) {
         callback(err);
       } else {
-        const movieObj = JSON.parse(data.toString());
-        Movie.create(movieObj, callback);
+        const movie = JSON.parse(data.toString());
+        Movie.create({ movie }, callback);
       }
     }));
   });
