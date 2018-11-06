@@ -8,8 +8,23 @@ require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
-const monogoAddress = 'mongodb://localhost/moviesDb';
 
+function buildDbAddress() {
+  if (process.env.DEFAULT_DB
+    && (process.env.DEFAULT_DB.toLowerCase() === 'false')
+    && process.env.DB_HOST
+    && process.env.DB_NAME
+    && process.env.DB_USER
+    && process.env.DB_PASS) {
+    return `mongodb://${process.env.DB_HOST}`
+      .replace('<dbuser>', process.env.DB_USER)
+      .replace('<dbpassword>', process.env.DB_PASS)
+      .replace('<dbname>', process.env.DB_NAME);
+  }
+  return undefined;
+}
+
+const monogoAddress = buildDbAddress() || 'mongodb://localhost/moviesDb';
 
 mongoose.connect(monogoAddress);
 const Movie = mongoose.model('Movie', { Title: String, Year: String });
@@ -28,7 +43,6 @@ function addMovie(title, callback) {
   const newTitle = title.trim().split(' ').filter(x => x !== '').join('+');
   const myUrl = `http://www.omdbapi.com/?apikey=${process.env.API_KEY}&t=${newTitle}`;
   http.get(myUrl, (response) => {
-    // eslint-disable-next-line consistent-return
     response.pipe(bl((err, data) => {
       if (err) {
         callback(err);
