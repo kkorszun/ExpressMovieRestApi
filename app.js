@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -24,9 +25,35 @@ function buildDbAddress() {
   return undefined;
 }
 
-const monogoAddress = buildDbAddress() || 'mongodb://localhost/moviesDb';
+function dbConnect(callback) {
+  const monogoAddress = buildDbAddress() || 'mongodb://localhost/moviesDb';
+  mongoose.connect(monogoAddress, { useNewUrlParser: true }).then(
+    () => { callback(null); },
+    (err) => { callback(err); },
+  );
+}
 
-mongoose.connect(monogoAddress);
+const dbCb = (err) => {
+  if (err) {
+    console.error(err);
+    setTimeout(() => {
+      dbConnect(dbCb);
+    }, 50000);
+  } else {
+    console.log('INFO: Db Connected');
+  }
+};
+
+dbConnect(dbCb);
+
+mongoose.connection.on('disconnected', () => {
+  console.log('INFO: Db disconnected');
+  dbConnect(dbCb);
+});
+
+
+mongoose.set('bufferCommands', false);
+
 const Movie = mongoose.model('Movie', { movie: Object });
 const Comment = mongoose.model('Comment', { movie_id: String, text: String });
 
