@@ -4,6 +4,7 @@
   "description": "Simple REST API in Express.js",
   "main": "app.js",
   "scripts": {
+    "start": "node app",
     "pretest": "eslint --ignore-path .gitignore .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
