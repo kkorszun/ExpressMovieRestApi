@@ -45,7 +45,7 @@ __GET /comments/:id__ - Serve list of comments associated with given movie id.
 * Npm installed
 * Internet connection
 * MongoDB base (as address) (local or external) 
-* api-key for 
+* api-key for [OMDb API](http://www.omdbapi.com)
 
 ### Installation ###
 Commandline in project directory:
@@ -55,7 +55,17 @@ npm install
 ```
 
 ### Run ###
-Commandline in project directory:
+#### environment variable ####
+PORT - http port
+DEFAULT_DB - if value other than "false" app uses hardcoded mongo address
+DB_HOST - mongoDB address with placeholders for user, password and base name
+DB_USER - db user
+DB_PASS - db user's password
+DB_NAME - db's name
+API_KEY - api-key for [OMDb API](http://www.omdbapi.com)
+
+Commandline in project directory, 
+environment variable API_KEY is required :
 
 ```
 npm start
