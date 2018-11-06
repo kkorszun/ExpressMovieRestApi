@@ -95,6 +95,8 @@ function getAllMovies(callback) {
 } */
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.text());
 
 app.get('/movies', (req, res) => getAllMovies((err, data) => {
   if (err) {
@@ -118,9 +120,19 @@ app.get('/comments', (req, res) => {
   });
 });
 
+function parseTitle(reqBody, contentType) {
+  if (reqBody.title) {
+    return reqBody.title;
+  } if (contentType === 'text/plain') {
+    return reqBody;
+  }
+  return undefined;
+}
+
 app.post('/movies', (req, res) => {
-  if (req.body.title) {
-    addMovie(req.body.title, (err, data) => {
+  const title = parseTitle(req.body, req.headers['content-type']);
+  if (title) {
+    addMovie(title, (err, data) => {
       if (err) {
         res.sendStatus(500);
       } else {
