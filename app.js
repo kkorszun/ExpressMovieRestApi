@@ -1,15 +1,18 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const http = require('http');
+const bl = require('bl');
+
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 const monogoAddress = 'mongodb://localhost/moviesDb';
-// const myUrl = `http://www.omdbapi.com/?i=tt3896198&apikey=${process.env.API_KEY}`;
+
 
 mongoose.connect(monogoAddress);
-const Movie = mongoose.model('Movie', { Title: String });
+const Movie = mongoose.model('Movie', { Title: String, Year: String });
 const Comment = mongoose.model('Comment', { Movie: String, Text: String });
 
 
@@ -22,8 +25,21 @@ function getAllComments(callback) {
 }
 
 function addMovie(title, callback) {
-  Movie.create({ Title: title }, callback);
+  const newTitle = title.trim().split(' ').filter(x => x !== '').join('+');
+  const myUrl = `http://www.omdbapi.com/?apikey=${process.env.API_KEY}&t=${newTitle}`;
+  http.get(myUrl, (response) => {
+    // eslint-disable-next-line consistent-return
+    response.pipe(bl((err, data) => {
+      if (err) {
+        callback(err);
+      } else {
+        const movieObj = JSON.parse(data.toString());
+        Movie.create(movieObj, callback);
+      }
+    }));
+  });
 }
+
 
 function addComment(movie, text, callback) {
   Comment.create({ Movie: movie, Text: text }, callback);
