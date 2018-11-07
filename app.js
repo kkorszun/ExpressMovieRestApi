@@ -1,13 +1,13 @@
 /* eslint-disable no-console */
 const express = require('express');
 const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
 const myHttpPromise = require('./myHttpPromise');
 require('dotenv').config();
+const db = require('./db');
 
-const app = express();
-const port = process.env.PORT || 3000;
+const { mongoose } = db;
 
+// --- my parsers
 function parseTitle(reqBody) {
   if (reqBody.title && typeof reqBody.title === 'string') {
     const title = reqBody.title.trim().toLowerCase();
@@ -18,58 +18,46 @@ function parseTitle(reqBody) {
   return undefined;
 }
 
-function buildDbAddress() {
-  if (process.env.DEFAULT_DB
-    && (process.env.DEFAULT_DB.toLowerCase() === 'false')
-    && process.env.DB_HOST
-    && process.env.DB_NAME
-    && process.env.DB_USER
-    && process.env.DB_PASS) {
-    return `mongodb://${process.env.DB_HOST}`
-      .replace('<dbuser>', process.env.DB_USER)
-      .replace('<dbpassword>', process.env.DB_PASS)
-      .replace('<dbname>', process.env.DB_NAME);
+function parseObjectId(id) {
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    return id;
   }
   return undefined;
 }
 
+// --- error handlers
 function logErrors(err, req, res, next) {
   console.error(err.stack);
   next(err);
 }
 
-function dbConnect(callback) {
-  const monogoAddress = buildDbAddress() || 'mongodb://localhost/moviesDb';
-  mongoose.connect(monogoAddress, { useNewUrlParser: true }).then(
-    () => { callback(null); },
-    (err) => { callback(err); },
-  );
+function clientErrorHandler(err, req, res, next) {
+  if (req.xhr) {
+    res.sendStatus(500);
+  } else {
+    next(err);
+  }
 }
 
-const dbCb = (err) => {
-  if (err) {
-    console.error(err.stack);
-    mongoose.disconnect();
-  } else {
-    console.log('INFO: Db Connected');
+// eslint-disable-next-line no-unused-vars
+function errorHandler(err, req, res, _next) {
+  if (res.statusCode === 400) {
+    res.sendStatus(400);
   }
-};
+  res.sendStatus(500);
+}
+// ---
 
-dbConnect(dbCb);
+const app = express();
+const port = process.env.PORT || 3000;
 
-mongoose.connection.on('disconnected', () => {
-  console.log('INFO: Db disconnected');
-  setTimeout(() => {
-    dbConnect(dbCb);
-  }, 10000);
-});
-
-
-mongoose.set('bufferCommands', false);
-
+// --- DB elemeents
+db.connect();
 const Movie = mongoose.model('Movie', { movie: Object });
 const Comment = mongoose.model('Comment', { movie_id: String, text: String });
+// ---
 
+mongoose.set('bufferCommands', false);
 
 function getComments(id, callback) {
   Comment.find({ Movie: id }, callback);
@@ -116,22 +104,6 @@ function getAllMovies(callback) {
   Movie.findById(id, callback);
 } */
 
-function clientErrorHandler(err, req, res, next) {
-  if (req.xhr) {
-    res.sendStatus(500);
-  } else {
-    next(err);
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function errorHandler(err, req, res, _next) {
-  if (res.statusCode === 400) {
-    res.sendStatus(400);
-  }
-  res.sendStatus(500);
-}
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.text());
@@ -151,13 +123,6 @@ app.get('/movies', (req, res, next) => getAllMovies((err, data) => {
   }
 }));
 
-function parseObjectId(id) {
-  if (mongoose.Types.ObjectId.isValid(id)) {
-    return id;
-  }
-  return undefined;
-}
-
 app.get('/comments/:id', (req, res, next) => {
   const id = parseObjectId(req.params.id);
   if (id) {
@@ -176,8 +141,6 @@ app.get('/comments', (req, res, next) => {
     if (err) { next(err); } else res.json(data);
   });
 });
-
-
 
 app.post('/movies', (req, res, next) => {
   const title = parseTitle(req.body);
