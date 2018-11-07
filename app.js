@@ -105,8 +105,11 @@ function addMovie(title, callback) {
     .catch(error => callback(error));
 }
 
-function addComment(movie, text, callback) {
-  Comment.create({ Movie: movie, Text: text }, callback);
+function addComment(movie_id, text, callback) {
+  Movie.findById(movie_id).exec()
+    .then(() => Comment.create({ movie_id, text }))
+    .then(comment => callback(null, comment))
+    .catch(callback);
 }
 
 function getAllMovies(callback) {
@@ -165,7 +168,7 @@ app.get('/comments/:id', (req, res, next) => {
       } else res.json(data);
     });
   } else {
-    res.sendStatus(400);
+    next(new Error('Value is not ObjectId'));
   }
 });
 
@@ -194,7 +197,7 @@ app.post('/movies', (req, res, next) => {
       }
     });
   } else {
-    res.sendStatus(400);
+    next(new Error('Value is not notempty String'));
   }
 });
 
