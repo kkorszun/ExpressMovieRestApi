@@ -2,60 +2,41 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const myParsers = require('./myParsers');
+const errorHandlers = require('./errorHandlers');
 require('dotenv').config();
 const db = require('./db');
 
 const { mongoose } = db;
-// .isValid(id)
-// --- error handlers
-function logErrors(err, req, res, next) {
-  console.error(err.stack);
-  next(err);
-}
 
-function clientErrorHandler(err, req, res, next) {
-  if (req.xhr) {
-    res.sendStatus(500);
-  } else {
-    next(err);
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function errorHandler(err, req, res, _next) {
-  if (res.statusCode === 400) {
-    res.sendStatus(400);
-  }
-  res.sendStatus(500);
-}
-// ---
-
+// --- EXPRESS
 const app = express();
 const port = process.env.PORT || 3000;
 
-// --- DB elemeents
+// -- DB ELEMENTS
 db.connect();
 const Movie = mongoose.model('Movie', { movie: Object });
 const Comment = mongoose.model('Comment', { movieId: String, text: String });
 const movieService = require('./services/movie')(Movie);
 const commentService = require('./services/comment')(Comment, Movie);
-// ---
 
+// -- BODY-PARSERS
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.text());
-app.use((req, res, next) => {
+
+
+// -- ROUTES
+// ---- /movies
+app.get('/movies', (req, res, next) => movieService.getAll((err, data) => {
+  if (err) { next(err); } else res.json(data);
+}));
+
+app.post((req, res, next) => {
   if (req.body && req.headers['content-type'] === 'text/plain') {
     req.body = { title: req.body };
   }
   next();
 });
-
-// /movies
-app.get('/movies', (req, res, next) => movieService.getAll((err, data) => {
-  if (err) { next(err); } else res.json(data);
-}));
-
 app.post('/movies', myParsers.parseTitle);
 app.post('/movies', (req, res, next) => {
   movieService.add(req.body.title, (err, data) => {
@@ -63,7 +44,7 @@ app.post('/movies', (req, res, next) => {
   });
 });
 
-// /comments
+// ---- /comments
 app.get('/comments/:id', myParsers.parseObjectId(mongoose.Types.ObjectId));
 app.get('/comments/:id', (req, res, next) => {
   commentService.getByMovie(req.body.id, (err, data) => {
@@ -91,9 +72,9 @@ app.post('/comments', (req, res, next) => {
   });
 });
 
-app.use(logErrors);
-app.use(clientErrorHandler);
-app.use(errorHandler);
+// -- ERROR HANDLERS USAGE
+app.use(errorHandlers.logErrors);
+app.use(errorHandlers.clientErrorHandler);
+app.use(errorHandlers.errorHandler);
 
-// eslint-disable-next-line no-console
 app.listen(port, () => console.log(`App listening on port ${port}!`));

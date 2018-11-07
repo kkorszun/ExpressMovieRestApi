@@ -1,4 +1,5 @@
-// --- validations
+/* eslint-disable no-console */
+// -- VALIDATORS
 function validateTitle(title) {
   if (typeof title === 'string') {
     const result = title.trim().toLowerCase();
@@ -9,7 +10,7 @@ function validateTitle(title) {
   return [new Error('Title value is not proper')];
 }
 
-// --- my parsers
+// -- PARSERS
 function parseTitle(req, res, next) {
   let err;
   if (req.body.title) {
