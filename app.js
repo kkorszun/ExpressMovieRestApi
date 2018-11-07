@@ -1,42 +1,12 @@
 /* eslint-disable no-console */
 const express = require('express');
 const bodyParser = require('body-parser');
+const myParsers = require('./myParsers');
 require('dotenv').config();
 const db = require('./db');
 
 const { mongoose } = db;
-
-// --- my parsers
-function parseTitle(reqBody) {
-  if (reqBody.title && typeof reqBody.title === 'string') {
-    const title = reqBody.title.trim().toLowerCase();
-    if (title !== '') {
-      return title;
-    }
-  }
-  return undefined;
-}
-
-function parseObjectId(id) {
-  if (mongoose.Types.ObjectId.isValid(id)) {
-    return id;
-  }
-  return undefined;
-}
-
-function parseComment(reqBody) {
-  let movieId;
-  let text;
-
-  if (reqBody.movieId && typeof reqBody.movieId === 'string') {
-    movieId = parseObjectId(reqBody.movieId);
-  }
-  if (reqBody.text && typeof reqBody.text === 'string') {
-    ({ text } = (reqBody));
-  }
-  return { movieId, text };
-}
-
+// .isValid(id)
 // --- error handlers
 function logErrors(err, req, res, next) {
   console.error(err.stack);
@@ -83,61 +53,42 @@ app.use((req, res, next) => {
 
 // /movies
 app.get('/movies', (req, res, next) => movieService.getAll((err, data) => {
-  if (err) {
-    // res.sendStatus(500);
-    next(err);
-  } else {
-    res.json(data);
-  }
+  if (err) { next(err); } else res.json(data);
 }));
 
+app.post('/movies', myParsers.parseTitle);
 app.post('/movies', (req, res, next) => {
-  const title = parseTitle(req.body);
-  if (title) {
-    movieService.add(title, (err, data) => {
-      if (err) { next(err); } else {
-        res.json(data);
-      }
-    });
-  } else {
-    next(new Error('Value is not notempty String'));
-  }
+  movieService.add(req.body.title, (err, data) => {
+    if (err) next(err); else res.json(data);
+  });
 });
 
 // /comments
+app.get('/comments/:id', myParsers.parseObjectId(mongoose.Types.ObjectId));
 app.get('/comments/:id', (req, res, next) => {
-  const id = parseObjectId(req.params.id);
-  if (id) {
-    commentService.getByMovie(id, (err, data) => {
-      if (err) {
-        next(err);
-      } else res.json(data);
-    });
-  } else {
-    next(new Error('Value is not ObjectId'));
-  }
+  commentService.getByMovie(req.body.id, (err, data) => {
+    if (err) {
+      next(err);
+    } else res.json(data);
+  });
 });
 
 app.get('/comments', (req, res, next) => {
   commentService.getAll((err, data) => {
-    if (err) { next(err); } else res.json(data);
+    if (err) next(err); else res.json(data);
   });
 });
 
+app.post('/comments', myParsers.parseObjectId(mongoose.Types.ObjectId, 'movieId'));
+app.post('/comments', myParsers.parseText);
 app.post('/comments', (req, res, next) => {
-  const { movieId, text } = parseComment(req.body);
-  if (movieId && text) {
-    // res.json(req.body);
-    commentService.add(movieId, text, (err, data) => {
-      if (err) {
-        next(err);
-      } else {
-        res.json(data);
-      }
-    });
-  } else {
-    res.sendStatus(400);
-  }
+  commentService.add(req.body.movieId, req.body.text, (err, data) => {
+    if (err) {
+      next(err);
+    } else {
+      res.json(data);
+    }
+  });
 });
 
 app.use(logErrors);
