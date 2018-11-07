@@ -71,26 +71,39 @@ function getAllComments(callback) {
   Comment.find(callback);
 }
 
+function myHttpPromise(url) {
+  const promise = new Promise((resolve, reject) => {
+    http.get(url, (response) => {
+      response.pipe(bl((err, data) => {
+        resolve(data);
+        reject(err);
+      }));
+    });
+  });
+  return promise;
+}
+
 function addMovie(title, callback) {
   const newTitle = title.trim().split(' ').filter(x => x !== '').join('+');
   const myUrl = `http://www.omdbapi.com/?apikey=${process.env.API_KEY}&t=${newTitle}`;
-  http.get(myUrl, (response) => {
-    console.log(response.statusCode);
-    response.pipe(bl((err, data) => {
-      if (err) {
-        callback(err);
-      } else {
-        const movie = JSON.parse(data.toString());
-        if (movie.Response && movie.Response === 'False') {
-          callback(new Error(movie.Error));
-        } else {
-          Movie.create({ movie }, callback);
-        }
+  let movie;
+  myHttpPromise(myUrl)
+    .then((data) => {
+      movie = JSON.parse(data.toString());
+      if (movie.Response && movie.Response === 'False') {
+        return Promise.reject(new Error(movie.Error));
       }
-    }));
-  });
+      return Movie.findOne({ movie }).exec();
+    })
+    .then((movie2) => {
+      if (!movie2) {
+        return Movie.create({ movie });
+      }
+      return Promise.reject(new Error('Movie already exist'));
+    })
+    .then(result => callback(null, result))
+    .catch(error => callback(error));
 }
-
 
 function addComment(movie, text, callback) {
   Comment.create({ Movie: movie, Text: text }, callback);
@@ -198,7 +211,7 @@ function parseComment(reqBody) {
 }
 
 app.post('/comments', (req, res, next) => {
-  const {movie_id, text} = parseComment(req.body);
+  const { movie_id, text } = parseComment(req.body);
   if (movie_id && text) {
     // res.json(req.body);
     addComment(movie_id, text, (err, data) => {
