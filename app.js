@@ -75,12 +75,17 @@ function addMovie(title, callback) {
   const newTitle = title.trim().split(' ').filter(x => x !== '').join('+');
   const myUrl = `http://www.omdbapi.com/?apikey=${process.env.API_KEY}&t=${newTitle}`;
   http.get(myUrl, (response) => {
+    console.log(response.statusCode);
     response.pipe(bl((err, data) => {
       if (err) {
         callback(err);
       } else {
         const movie = JSON.parse(data.toString());
-        Movie.create({ movie }, callback);
+        if (movie.Response && movie.Response === 'False') {
+          callback(new Error(movie.Error));
+        } else {
+          Movie.create({ movie }, callback);
+        }
       }
     }));
   });
@@ -131,12 +136,24 @@ app.get('/movies', (req, res, next) => getAllMovies((err, data) => {
   }
 }));
 
+function parseObjectId(id) {
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    return id;
+  }
+  return undefined;
+}
+
 app.get('/comments/:id', (req, res, next) => {
-  getComments(req.params.id, (err, data) => {
-    if (err) {
-      next(err);
-    } else res.json(data);
-  });
+  const id = parseObjectId(req.params.id);
+  if (id) {
+    getComments(id, (err, data) => {
+      if (err) {
+        next(err);
+      } else res.json(data);
+    });
+  } else {
+    res.sendStatus(400);
+  }
 });
 
 app.get('/comments', (req, res, next) => {
@@ -147,7 +164,10 @@ app.get('/comments', (req, res, next) => {
 
 function parseTitle(reqBody) {
   if (reqBody.title && typeof reqBody.title === 'string') {
-    return reqBody.title;
+    const title = reqBody.title.trim().toLowerCase();
+    if (title !== '') {
+      return title;
+    }
   }
   return undefined;
 }
@@ -165,10 +185,23 @@ app.post('/movies', (req, res, next) => {
   }
 });
 
+function parseComment(reqBody) {
+  let movie_id;
+  let text;
+  if (reqBody.movie_id && typeof reqBody.movie_id === 'string') {
+    movie_id = parseObjectId(reqBody.movie_id);
+  }
+  if (reqBody.text && typeof reqBody.text === 'string') {
+    text = parseObjectId(reqBody.movie_id);
+  }
+  return { movie_id, text };
+}
+
 app.post('/comments', (req, res, next) => {
-  if (req.body.id && req.body.comment) {
+  const {movie_id, text} = parseComment(req.body);
+  if (movie_id && text) {
     // res.json(req.body);
-    addComment(req.body.id, req.body.comment, (err, data) => {
+    addComment(movie_id, text, (err, data) => {
       if (err) {
         next(err);
       } else {
