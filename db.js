@@ -2,8 +2,6 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-mongoose.set('bufferCommands', false);
-
 function buildDbAddress() {
   if (process.env.DEFAULT_DB
       && (process.env.DEFAULT_DB.toLowerCase() === 'false')
@@ -21,7 +19,7 @@ function buildDbAddress() {
 
 function dbConnect(callback) {
   const monogoAddress = buildDbAddress() || 'mongodb://localhost/moviesDb';
-  mongoose.connect(monogoAddress, { useNewUrlParser: true }).then(
+  mongoose.connect(monogoAddress, { bufferCommands: false }).then(
     () => { callback(null); },
     (err) => { callback(err); },
   );
@@ -31,17 +29,21 @@ const dbCb = (err) => {
   if (err) {
     console.error(err.stack);
     mongoose.disconnect();
-  } else {
-    console.log('INFO: Db Connected');
   }
 };
+
+mongoose.connection.on('connected', () => {
+  console.log('INFO: Db Connected');
+});
 
 mongoose.connection.on('disconnected', () => {
   console.log('INFO: Db disconnected');
   setTimeout(() => {
     dbConnect(dbCb);
-  }, 10000);
+  }, 60000);
 });
+
+mongoose.connection.on('error', () => { mongoose.disconnect(); });
 
 function connect() { dbConnect(dbCb); }
 

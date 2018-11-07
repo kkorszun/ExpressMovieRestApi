@@ -74,7 +74,6 @@ app.post('/comments', (req, res, next) => {
 
 // -- ERROR HANDLERS USAGE
 app.use(errorHandlers.logErrors);
-app.use(errorHandlers.clientErrorHandler);
 app.use(errorHandlers.errorHandler);
 
 app.listen(port, () => console.log(`App listening on port ${port}!`));
