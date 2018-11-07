@@ -25,15 +25,16 @@ function parseObjectId(id) {
 }
 
 function parseComment(reqBody) {
-  let movie_id;
+  let movieId;
   let text;
-  if (reqBody.movie_id && typeof reqBody.movie_id === 'string') {
-    movie_id = parseObjectId(reqBody.movie_id);
+
+  if (reqBody.movieId && typeof reqBody.movieId === 'string') {
+    movieId = parseObjectId(reqBody.movieId);
   }
   if (reqBody.text && typeof reqBody.text === 'string') {
-    text = parseObjectId(reqBody.movie_id);
+    ({ text } = (reqBody));
   }
-  return { movie_id, text };
+  return { movieId, text };
 }
 
 // --- error handlers
@@ -65,30 +66,10 @@ const port = process.env.PORT || 3000;
 // --- DB elemeents
 db.connect();
 const Movie = mongoose.model('Movie', { movie: Object });
-const Comment = mongoose.model('Comment', { movie_id: String, text: String });
+const Comment = mongoose.model('Comment', { movieId: String, text: String });
 const movieService = require('./services/movie')(Movie);
+const commentService = require('./services/comment')(Comment, Movie);
 // ---
-
-mongoose.set('bufferCommands', false);
-
-function getComments(id, callback) {
-  Comment.find({ Movie: id }, callback);
-}
-
-function getAllComments(callback) {
-  Comment.find(callback);
-}
-
-function addComment(movie_id, text, callback) {
-  Movie.findById(movie_id).exec()
-    .then(() => Comment.create({ movie_id, text }))
-    .then(comment => callback(null, comment))
-    .catch(callback);
-}
-
-/* function getMovie(id, callback) {
-  Movie.findById(id, callback);
-} */
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -100,6 +81,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// /movies
 app.get('/movies', (req, res, next) => movieService.getAll((err, data) => {
   if (err) {
     // res.sendStatus(500);
@@ -122,10 +104,11 @@ app.post('/movies', (req, res, next) => {
   }
 });
 
+// /comments
 app.get('/comments/:id', (req, res, next) => {
   const id = parseObjectId(req.params.id);
   if (id) {
-    getComments(id, (err, data) => {
+    commentService.getByMovie(id, (err, data) => {
       if (err) {
         next(err);
       } else res.json(data);
@@ -136,16 +119,16 @@ app.get('/comments/:id', (req, res, next) => {
 });
 
 app.get('/comments', (req, res, next) => {
-  getAllComments((err, data) => {
+  commentService.getAll((err, data) => {
     if (err) { next(err); } else res.json(data);
   });
 });
 
 app.post('/comments', (req, res, next) => {
-  const { movie_id, text } = parseComment(req.body);
-  if (movie_id && text) {
+  const { movieId, text } = parseComment(req.body);
+  if (movieId && text) {
     // res.json(req.body);
-    addComment(movie_id, text, (err, data) => {
+    commentService.add(movieId, text, (err, data) => {
       if (err) {
         next(err);
       } else {

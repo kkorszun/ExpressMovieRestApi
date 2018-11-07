@@ -1,5 +1,8 @@
+/* eslint-disable no-console */
 const mongoose = require('mongoose');
 require('dotenv').config();
+
+mongoose.set('bufferCommands', false);
 
 function buildDbAddress() {
   if (process.env.DEFAULT_DB
