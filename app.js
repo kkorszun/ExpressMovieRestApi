@@ -2,13 +2,21 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const http = require('http');
-const bl = require('bl');
-
+const myHttpPromise = require('./myHttpPromise');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+function parseTitle(reqBody) {
+  if (reqBody.title && typeof reqBody.title === 'string') {
+    const title = reqBody.title.trim().toLowerCase();
+    if (title !== '') {
+      return title;
+    }
+  }
+  return undefined;
+}
 
 function buildDbAddress() {
   if (process.env.DEFAULT_DB
@@ -71,18 +79,6 @@ function getAllComments(callback) {
   Comment.find(callback);
 }
 
-function myHttpPromise(url) {
-  const promise = new Promise((resolve, reject) => {
-    http.get(url, (response) => {
-      response.pipe(bl((err, data) => {
-        resolve(data);
-        reject(err);
-      }));
-    });
-  });
-  return promise;
-}
-
 function addMovie(title, callback) {
   const newTitle = title.trim().split(' ').filter(x => x !== '').join('+');
   const myUrl = `http://www.omdbapi.com/?apikey=${process.env.API_KEY}&t=${newTitle}`;
@@ -130,6 +126,9 @@ function clientErrorHandler(err, req, res, next) {
 
 // eslint-disable-next-line no-unused-vars
 function errorHandler(err, req, res, _next) {
+  if (res.statusCode === 400) {
+    res.sendStatus(400);
+  }
   res.sendStatus(500);
 }
 
@@ -178,15 +177,7 @@ app.get('/comments', (req, res, next) => {
   });
 });
 
-function parseTitle(reqBody) {
-  if (reqBody.title && typeof reqBody.title === 'string') {
-    const title = reqBody.title.trim().toLowerCase();
-    if (title !== '') {
-      return title;
-    }
-  }
-  return undefined;
-}
+
 
 app.post('/movies', (req, res, next) => {
   const title = parseTitle(req.body);
