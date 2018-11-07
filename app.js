@@ -25,6 +25,11 @@ function buildDbAddress() {
   return undefined;
 }
 
+function logErrors(err, req, res, next) {
+  console.error(err.stack);
+  next(err);
+}
+
 function dbConnect(callback) {
   const monogoAddress = buildDbAddress() || 'mongodb://localhost/moviesDb';
   mongoose.connect(monogoAddress, { useNewUrlParser: true }).then(
@@ -35,10 +40,8 @@ function dbConnect(callback) {
 
 const dbCb = (err) => {
   if (err) {
-    console.error(err);
-    setTimeout(() => {
-      dbConnect(dbCb);
-    }, 50000);
+    console.error(err.stack);
+    mongoose.disconnect();
   } else {
     console.log('INFO: Db Connected');
   }
@@ -48,7 +51,9 @@ dbConnect(dbCb);
 
 mongoose.connection.on('disconnected', () => {
   console.log('INFO: Db disconnected');
-  dbConnect(dbCb);
+  setTimeout(() => {
+    dbConnect(dbCb);
+  }, 10000);
 });
 
 
@@ -94,48 +99,64 @@ function getAllMovies(callback) {
   Movie.findById(id, callback);
 } */
 
+function clientErrorHandler(err, req, res, next) {
+  if (req.xhr) {
+    res.sendStatus(500);
+  } else {
+    next(err);
+  }
+}
+
+// eslint-disable-next-line no-unused-vars
+function errorHandler(err, req, res, _next) {
+  res.sendStatus(500);
+}
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.text());
+app.use((req, res, next) => {
+  if (req.body && req.headers['content-type'] === 'text/plain') {
+    req.body = { title: req.body };
+  }
+  next();
+});
 
-app.get('/movies', (req, res) => getAllMovies((err, data) => {
+app.get('/movies', (req, res, next) => getAllMovies((err, data) => {
   if (err) {
-    res.sendStatus(500);
+    // res.sendStatus(500);
+    next(err);
   } else {
     res.json(data);
   }
 }));
 
-app.get('/comments/:id', (req, res) => {
+app.get('/comments/:id', (req, res, next) => {
   getComments(req.params.id, (err, data) => {
     if (err) {
-      // ...
+      next(err);
     } else res.json(data);
   });
 });
 
-app.get('/comments', (req, res) => {
+app.get('/comments', (req, res, next) => {
   getAllComments((err, data) => {
-    if (err) { /* ... */ } else res.json(data);
+    if (err) { next(err); } else res.json(data);
   });
 });
 
-function parseTitle(reqBody, contentType) {
-  if (reqBody.title) {
+function parseTitle(reqBody) {
+  if (reqBody.title && typeof reqBody.title === 'string') {
     return reqBody.title;
-  } if (contentType === 'text/plain') {
-    return reqBody;
   }
   return undefined;
 }
 
-app.post('/movies', (req, res) => {
-  const title = parseTitle(req.body, req.headers['content-type']);
+app.post('/movies', (req, res, next) => {
+  const title = parseTitle(req.body);
   if (title) {
     addMovie(title, (err, data) => {
-      if (err) {
-        res.sendStatus(500);
-      } else {
+      if (err) { next(err); } else {
         res.json(data);
       }
     });
@@ -144,12 +165,12 @@ app.post('/movies', (req, res) => {
   }
 });
 
-app.post('/comments', (req, res) => {
+app.post('/comments', (req, res, next) => {
   if (req.body.id && req.body.comment) {
     // res.json(req.body);
     addComment(req.body.id, req.body.comment, (err, data) => {
       if (err) {
-        res.sendStatus(500);
+        next(err);
       } else {
         res.json(data);
       }
@@ -159,6 +180,9 @@ app.post('/comments', (req, res) => {
   }
 });
 
+app.use(logErrors);
+app.use(clientErrorHandler);
+app.use(errorHandler);
 
 // eslint-disable-next-line no-console
 app.listen(port, () => console.log(`App listening on port ${port}!`));
