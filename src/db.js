@@ -2,6 +2,11 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+function getDbName() {
+  if (process.env.NODE_ENV && process.env.NODE_ENV === 'test') return process.env.DB_TEST_NAME;
+  return process.env.DB_NAME;
+}
+
 function buildDbAddress() {
   if (process.env.DEFAULT_DB
       && (process.env.DEFAULT_DB.toLowerCase() === 'false')
@@ -9,16 +14,18 @@ function buildDbAddress() {
       && process.env.DB_NAME
       && process.env.DB_USER
       && process.env.DB_PASS) {
+    const dbname = getDbName();
     return `mongodb://${process.env.DB_HOST}`
       .replace('<dbuser>', process.env.DB_USER)
       .replace('<dbpassword>', process.env.DB_PASS)
-      .replace('<dbname>', process.env.DB_NAME);
+      .replace('<dbname>', dbname);
   }
   return undefined;
 }
 
 function dbConnect(callback) {
-  const monogoAddress = buildDbAddress() || 'mongodb://localhost/moviesDb';
+  const dbname = getDbName();
+  const monogoAddress = buildDbAddress() || `mongodb://localhost/${dbname}`;
   mongoose.connect(monogoAddress, { bufferCommands: false }).then(
     () => { callback(null); },
     (err) => { callback(err); },
