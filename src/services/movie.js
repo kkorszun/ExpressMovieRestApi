@@ -1,4 +1,5 @@
 const myHttpPromise = require('../myHttpPromise');
+const Movie = require('../models/movie');
 
 function add(title, callback) {
   const newTitle = title.trim().split(' ').filter(x => x !== '').join('+');
@@ -10,11 +11,11 @@ function add(title, callback) {
       if (movie.Response && movie.Response === 'False') {
         return Promise.reject(new Error(movie.Error));
       }
-      return this.Movie.findOne({ movie }).exec();
+      return Movie.findOne({ movie }).exec();
     })
     .then((movie2) => {
       if (!movie2) {
-        return this.Movie.create({ movie });
+        return Movie.create({ movie });
       }
       return Promise.reject(new Error('Movie already exist'));
     })
@@ -23,7 +24,7 @@ function add(title, callback) {
 }
 
 function getAll(callback) {
-  this.Movie.find(callback);
+  Movie.find(callback);
 }
 
 /* function getMovie(id, callback) {
@@ -31,6 +32,4 @@ function getAll(callback) {
 } */
 
 // eslint-disable-next-line func-names
-module.exports = function (Movie) {
-  return { Movie, add, getAll };
-};
+module.exports = { add, getAll };

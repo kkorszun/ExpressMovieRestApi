@@ -1,12 +1,12 @@
 /* eslint-disable no-console */
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+
 const myParsers = require('./myParsers');
 const errorHandlers = require('./errorHandlers');
 require('dotenv').config();
 const db = require('./db');
-
-const { mongoose } = db;
 
 // --- EXPRESS
 const app = express();
@@ -14,10 +14,8 @@ const port = process.env.PORT || 3000;
 
 // -- DB ELEMENTS
 db.connect();
-const Movie = mongoose.model('Movie', { movie: Object });
-const Comment = mongoose.model('Comment', { movieId: String, text: String });
-const movieService = require('./services/movie')(Movie);
-const commentService = require('./services/comment')(Comment, Movie);
+const movieService = require('./services/movie');
+const commentService = require('./services/comment');
 
 // -- BODY-PARSERS
 app.use(bodyParser.json());

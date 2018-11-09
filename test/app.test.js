@@ -6,7 +6,6 @@ describe('request.agent(app)', () => {
   const agent = request.agent(app);
 
   before(async () => {
-    
     await db.mongoose.connection;
   });
 
