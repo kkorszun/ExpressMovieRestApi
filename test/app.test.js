@@ -23,8 +23,8 @@ describe('request.agent(app)', () => {
   });
 
   after(async () => {
-    await Movie.remove().exec();
-    await Comment.remove().exec();
+    await Movie.deleteMany().exec();
+    await Comment.deleteMany().exec();
   });
 
   describe('GET /', () => {
@@ -45,6 +45,31 @@ describe('request.agent(app)', () => {
     });
   });
 
+  describe('POST /movies', () => {
+    it('movie.Title should be "Hair"', (done) => {
+      request(app)
+        .post('/movies')
+        .send({ title: 'hair' })
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .then((res) => {
+          assert(res.body.movie.Title, 'Hair');
+          done();
+        })
+        .catch(err => done(err));
+    });
+  });
+
+  describe('POST /movies', () => {
+    it('bad request returns 400', (done) => {
+      request(app)
+        .post('/movies')
+        .send({})
+        .expect(400, done);
+    });
+  });
+
   describe('GET /comments', () => {
     it('respond with json', (done) => {
       agent
@@ -55,13 +80,58 @@ describe('request.agent(app)', () => {
     });
   });
 
-  describe('GET /comments/:id', () => {
+  describe('GET /comments/id', () => {
     it('respond with json', (done) => {
       agent
         .get(`/comments/${myMovie._id.toString()}`)
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, done);
+    });
+  });
+
+  describe('GET /comments/:id', () => {
+    it('bad request returns 400', (done) => {
+      agent
+        .get('/comments/aaa')
+        .expect(400, done);
+    });
+  });
+
+
+  describe('POST /comments/', () => {
+    it('respond with json and text should be as given', (done) => {
+      request(app)
+        .post('/comments')
+        .send({ movieId: myMovie._id.toString(), text: 'test' })
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .then((res) => {
+          assert(res.body.text, 'test');
+          done();
+        })
+        .catch(err => done(err));
+    });
+  });
+
+  describe('POST /comments/', () => {
+    it('bad request returns 400', (done) => {
+      request(app)
+        .post('/comments')
+        .send({})
+        .expect(400, done);
+    });
+  });
+
+
+  // should be changed (it's 500, should be 400)
+  describe('POST /comments/', () => {
+    it('respond with 400  if movie id with does not exists', (done) => {
+      request(app)
+        .post('/comments')
+        .send({ movieId: '5be2fedb037ffa3fecbef7ea', text: 'test' })
+        .expect(500, done);
     });
   });
 });

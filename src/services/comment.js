@@ -11,7 +11,12 @@ function getAll(callback) {
 
 function add(movieId, text, callback) {
   Movie.findById(movieId).exec()
-    .then(() => Comment.create({ movieId, text }))
+    .then((result) => {
+      if (result) {
+        return Comment.create({ movieId, text });
+      }
+      return Promise.reject(new Error('No movie with this ObjectId'));
+    })
     .then(comment => callback(null, comment))
     .catch(callback);
 }
