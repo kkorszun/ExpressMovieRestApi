@@ -25,6 +25,7 @@ describe('request.agent(app)', () => {
   after(async () => {
     await Movie.deleteMany().exec();
     await Comment.deleteMany().exec();
+    process.exit(0);
   });
 
   describe('GET /', () => {
