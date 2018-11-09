@@ -1,12 +1,30 @@
+/* eslint-disable no-underscore-dangle */
 const request = require('supertest');
+const mongoose = require('mongoose');
+const assert = require('assert');
+
 const app = require('../src/app');
-const db = require('../src/db');
+const Movie = require('../src/models/movie');
+const Comment = require('../src/models/comment');
+const mockMovie = require('./mockMovie');
+
+let myMovie;
+
 
 describe('request.agent(app)', () => {
   const agent = request.agent(app);
 
   before(async () => {
-    await db.mongoose.connection;
+    await mongoose.connection;
+    myMovie = new Movie({ movie: mockMovie });
+    // console.log(myMovie);
+    await myMovie.save();
+    // await Movie.find(data => console.log(data)).;
+  });
+
+  after(async () => {
+    await Movie.remove().exec();
+    await Comment.remove().exec();
   });
 
   describe('GET /', () => {
@@ -31,6 +49,16 @@ describe('request.agent(app)', () => {
     it('respond with json', (done) => {
       agent
         .get('/comments')
+        .set('Accept', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(200, done);
+    });
+  });
+
+  describe('GET /comments/:id', () => {
+    it('respond with json', (done) => {
+      agent
+        .get(`/comments/${myMovie._id.toString()}`)
         .set('Accept', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, done);

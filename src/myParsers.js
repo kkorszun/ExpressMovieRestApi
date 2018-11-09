@@ -27,6 +27,11 @@ function parseTitle(req, res, next) {
   next();
 }
 
+function parseGetId(req, res, next) {
+  req.body.id = req.params.id;
+  next();
+}
+
 function parseObjectId(ObjectId, name) {
   return (req, res, next) => {
     const id = req.body[name || 'id'];
@@ -46,4 +51,9 @@ function parseText(req, res, next) {
   next();
 }
 
-module.exports = { parseTitle, parseObjectId, parseText };
+module.exports = {
+  parseTitle,
+  parseObjectId,
+  parseText,
+  parseGetId,
+};

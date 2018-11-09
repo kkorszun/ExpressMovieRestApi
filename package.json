@@ -4,7 +4,7 @@
   "description": "Simple REST API in Express.js",
   "main": "app.js",
   "scripts": {
-    "start": "cross-env NODE_ENV=test node ./src/app",
+    "start": "node ./src/app",
     "pretest": "eslint --ignore-path .gitignore .",
     "test": "cross-env NODE_ENV=test  mocha"
   },
