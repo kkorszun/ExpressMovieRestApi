@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 const express = require('express');
 const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
 
 const myParsers = require('./myParsers');
 const errorHandlers = require('./errorHandlers');
@@ -29,7 +28,8 @@ app.get('/movies', (req, res, next) => movieService.getAll((err, data) => {
   if (err) { next(err); } else res.json(data);
 }));
 
-app.post((req, res, next) => {
+app.post('/movies', (req, res, next) => {
+  console.log(req.body);
   if (req.body && req.headers['content-type'] === 'text/plain') {
     req.body = { title: req.body };
   }
@@ -38,31 +38,39 @@ app.post((req, res, next) => {
 app.post('/movies', myParsers.parseTitle);
 app.post('/movies', (req, res, next) => {
   movieService.add(req.body.title, (err, data) => {
-    if (err) next(err); else res.json(data);
+    if (err) {
+      next(err);
+    } else {
+      res.json(data);
+    }
   });
 });
 
 // ---- /comments
-app.get('/comments/:id', myParsers.parseGetId);
-app.get('/comments/:id', myParsers.parseObjectId);
-app.get('/comments/:id', (req, res, next) => {
-  commentService.getByMovie(req.body.id, (err, data) => {
-    if (err) {
-      next(err);
-    } else res.json(data);
-  });
-});
-
 app.get('/comments', (req, res, next) => {
   commentService.getAll((err, data) => {
     if (err) next(err); else res.json(data);
   });
 });
 
-app.post('/comments', myParsers.parseObjectId(mongoose.Types.ObjectId, 'movieId'));
+app.post('/comments', myParsers.parseObjectId('movieId'));
 app.post('/comments', myParsers.parseText);
 app.post('/comments', (req, res, next) => {
   commentService.add(req.body.movieId, req.body.text, (err, data) => {
+    if (err) {
+      next(err);
+    } else {
+      res.json(data);
+    }
+  });
+});
+
+
+app.get('/comments/:id', myParsers.parseGetId);
+app.get('/comments/:id', myParsers.parseObjectId());
+app.get('/comments/:id', (req, res, next) => {
+  console.log(req.body.id);
+  commentService.getByMovie(req.body.id, (err, data) => {
     if (err) {
       next(err);
     } else {

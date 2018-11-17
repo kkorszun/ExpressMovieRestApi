@@ -16,6 +16,8 @@ describe('request.agent(app)', () => {
 
   before(async () => {
     await mongoose.connection;
+    await Movie.deleteMany().exec();
+    await Comment.deleteMany().exec();
     myMovie = new Movie({ movie: mockMovie });
     await myMovie.save();
   });
@@ -23,7 +25,7 @@ describe('request.agent(app)', () => {
   after(async () => {
     await Movie.deleteMany().exec();
     await Comment.deleteMany().exec();
-    process.exit(0);
+    // process.exit(0);
   });
 
   describe('GET /', () => {
@@ -122,7 +124,6 @@ describe('request.agent(app)', () => {
         .expect(400, done);
     });
   });
-
 
   // should be changed (it's 500, should be 400)
   describe('POST /comments/', () => {

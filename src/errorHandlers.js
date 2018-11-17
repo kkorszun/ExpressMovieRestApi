@@ -2,6 +2,8 @@
 function logErrors(err, req, res, next) {
   if (!process.env.NODE_ENV || process.env.NODE_ENV !== 'test') {
     console.error(err.stack);
+  } else {
+    // console.error(err.stack);
   }
   next(err);
 }

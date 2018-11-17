@@ -5,6 +5,7 @@ Simple REST API in Express.js
 * [Description](#description)
 * [Technologies](#technologies)
 * [Usage](#usage)
+* [Implementation](#implementation) 
 ## Description ##
 REST API - database interacting with external API.
 ROUTES :
@@ -68,6 +69,12 @@ Commandline in project directory, environment variable API_KEY is required :
 
 ```
 npm start
+```
+
+### Run ###
+Commandline in project directory
+```
+npm test
 ```
 
 ## Implementation ##
