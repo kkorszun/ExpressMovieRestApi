@@ -71,7 +71,9 @@ Commandline in project directory, environment variable API_KEY is required :
 npm start
 ```
 
-### Run ###
+### Tests ###
+Run tests: 
+
 Commandline in project directory
 ```
 npm test
