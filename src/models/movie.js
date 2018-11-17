@@ -1,1 +1,2 @@
-module.exports = require('mongoose').model('Movie', { movie: Object });
+module.exports = require('mongoose')
+  .model('Movie', { movie: Object });

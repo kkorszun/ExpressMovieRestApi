@@ -27,9 +27,4 @@ function getAll(callback) {
   Movie.find(callback);
 }
 
-/* function getMovie(id, callback) {
-  Movie.findById(id, callback);
-} */
-
-// eslint-disable-next-line func-names
 module.exports = { add, getAll };

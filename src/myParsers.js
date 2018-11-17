@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+const mongoose = require('mongoose');
+
 // -- VALIDATORS
 function validateTitle(title) {
   if (typeof title === 'string') {
@@ -15,7 +17,6 @@ function parseTitle(req, res, next) {
   let err;
   if (req.body.title) {
     [err, req.body.title] = validateTitle(req.body.title);
-    console.log(req.body.title);
   } else {
     res.statusCode = 400;
     next(new Error('No title value'));
@@ -32,7 +33,8 @@ function parseGetId(req, res, next) {
   next();
 }
 
-function parseObjectId(ObjectId, name) {
+function parseObjectId(name) {
+  const { ObjectId } = mongoose.Types;
   return (req, res, next) => {
     const id = req.body[name || 'id'];
     if (!id || (typeof id !== 'string') || !ObjectId.isValid(id)) {

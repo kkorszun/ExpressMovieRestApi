@@ -17,9 +17,7 @@ describe('request.agent(app)', () => {
   before(async () => {
     await mongoose.connection;
     myMovie = new Movie({ movie: mockMovie });
-    // console.log(myMovie);
     await myMovie.save();
-    // await Movie.find(data => console.log(data)).;
   });
 
   after(async () => {

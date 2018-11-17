@@ -44,7 +44,7 @@ app.post('/movies', (req, res, next) => {
 
 // ---- /comments
 app.get('/comments/:id', myParsers.parseGetId);
-app.get('/comments/:id', myParsers.parseObjectId(mongoose.Types.ObjectId));
+app.get('/comments/:id', myParsers.parseObjectId);
 app.get('/comments/:id', (req, res, next) => {
   commentService.getByMovie(req.body.id, (err, data) => {
     if (err) {

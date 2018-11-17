@@ -1,1 +1,2 @@
-module.exports = require('mongoose').model('Comment', { movieId: String, text: String });
+module.exports = require('mongoose')
+  .model('Comment', { movieId: String, text: String });

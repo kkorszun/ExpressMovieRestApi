@@ -21,7 +21,6 @@ function add(movieId, text, callback) {
     .catch(callback);
 }
 
-// eslint-disable-next-line func-names
 module.exports = {
   getByMovie, getAll, add,
 };
