@@ -29,7 +29,6 @@ app.get('/movies', (req, res, next) => movieService.getAll((err, data) => {
 }));
 
 app.post('/movies', (req, res, next) => {
-  console.log(req.body);
   if (req.body && req.headers['content-type'] === 'text/plain') {
     req.body = { title: req.body };
   }
@@ -69,7 +68,6 @@ app.post('/comments', (req, res, next) => {
 app.get('/comments/:id', myParsers.parseGetId);
 app.get('/comments/:id', myParsers.parseObjectId());
 app.get('/comments/:id', (req, res, next) => {
-  console.log(req.body.id);
   commentService.getByMovie(req.body.id, (err, data) => {
     if (err) {
       next(err);

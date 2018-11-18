@@ -44,7 +44,7 @@ mongoose.connection.on('connected', () => {
 });
 
 mongoose.connection.on('disconnected', () => {
-  console.log('INFO: Db disconnected');
+  console.log('INFO: Db Disconnected');
   setTimeout(() => {
     dbConnect(dbCb);
   }, 60000);
