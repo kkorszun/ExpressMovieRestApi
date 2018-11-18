@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 const Movie = require('../models/movie');
 const Comment = require('../models/comment');
 
@@ -9,17 +10,21 @@ function getAll(callback) {
   Comment.find(callback);
 }
 
-function add(movieId, text, callback) {
-  Movie.findById(movieId).exec()
-    .then((result) => {
-      if (result) {
-        return Comment.create({ movieId, text });
+const add = async (movieId, text, callback) => {
+  try {
+    const movie = await Movie.findById(movieId).exec();
+    if (movie) {
+      const comment = await Comment.create({ movieId: movie._id, text });
+      if (comment) {
+        callback(null, comment);
       }
-      return Promise.reject(new Error('No movie with this ObjectId'));
-    })
-    .then(comment => callback(null, comment))
-    .catch(callback);
-}
+    } else {
+      throw new Error('No movie with this ObjectId');
+    }
+  } catch (err) {
+    callback(err);
+  }
+};
 
 module.exports = {
   getByMovie, getAll, add,
