@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/kkorszun/ExpressMovieRestApi#readme",
   "dependencies": {
+    "axios": "^0.18.0",
     "bl": "^2.1.2",
     "body-parser": "^1.18.3",
     "dotenv": "^6.1.0",
