@@ -2,9 +2,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
+require('dotenv').config();
+
 const myParsers = require('./myParsers');
 const errorHandlers = require('./errorHandlers');
-require('dotenv').config();
 const db = require('./db');
 
 // --- EXPRESS
@@ -13,8 +14,8 @@ const port = process.env.PORT || 3000;
 
 // -- DB ELEMENTS
 db.connect();
-const movieService = require('./services/movie');
-const commentService = require('./services/comment');
+const movieController = require('./controllers/movie');
+const commentController = require('./controllers/comment');
 
 // -- BODY-PARSERS
 app.use(bodyParser.json());
@@ -24,7 +25,7 @@ app.use(bodyParser.text());
 
 // -- ROUTES
 // ---- /movies
-app.get('/movies', (req, res, next) => movieService.getAll((err, data) => {
+app.get('/movies', (req, res, next) => movieController.getAll((err, data) => {
   if (err) { next(err); } else res.json(data);
 }));
 
@@ -36,7 +37,7 @@ app.post('/movies', (req, res, next) => {
 });
 app.post('/movies', myParsers.parseTitle);
 app.post('/movies', (req, res, next) => {
-  movieService.add(req.body.title, (err, data) => {
+  movieController.add(req.body.title, (err, data) => {
     if (err) {
       next(err);
     } else {
@@ -47,7 +48,7 @@ app.post('/movies', (req, res, next) => {
 
 // ---- /comments
 app.get('/comments', (req, res, next) => {
-  commentService.getAll((err, data) => {
+  commentController.getAll((err, data) => {
     if (err) next(err); else res.json(data);
   });
 });
@@ -55,7 +56,7 @@ app.get('/comments', (req, res, next) => {
 app.post('/comments', myParsers.parseObjectId('movieId'));
 app.post('/comments', myParsers.parseText);
 app.post('/comments', (req, res, next) => {
-  commentService.add(req.body.movieId, req.body.text, (err, data) => {
+  commentController.add(req.body.movieId, req.body.text, (err, data) => {
     if (err) {
       next(err);
     } else {
@@ -64,11 +65,10 @@ app.post('/comments', (req, res, next) => {
   });
 });
 
-
 app.get('/comments/:id', myParsers.parseGetId);
 app.get('/comments/:id', myParsers.parseObjectId());
 app.get('/comments/:id', (req, res, next) => {
-  commentService.getByMovie(req.body.id, (err, data) => {
+  commentController.getByMovie(req.body.id, (err, data) => {
     if (err) {
       next(err);
     } else {

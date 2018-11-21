@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 const mongoose = require('mongoose');
 
 // -- VALIDATORS
@@ -33,10 +32,10 @@ function parseGetId(req, res, next) {
   next();
 }
 
-function parseObjectId(name) {
+function parseObjectId(name = 'id') {
   const { ObjectId } = mongoose.Types;
   return (req, res, next) => {
-    const id = req.body[name || 'id'];
+    const id = req.body[name];
     if (!id || (typeof id !== 'string') || !ObjectId.isValid(id)) {
       res.statusCode = 400;
       next(new Error(`Argument ${id} is not valid ObjectId`));
