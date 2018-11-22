@@ -1,21 +1,22 @@
-const axios = require('axios');
 const Movie = require('../models/movie');
+const omdbapi = require('../services/omdbapi');
+
+async function movieExist(movie) {
+  return (await Movie.findOne({ movie: { title: movie.title } }).exec()) !== null;
+}
+
+async function saveMovie(movie) {
+  if (await movieExist(movie)) {
+    throw new Error('Movie already exists');
+  } else {
+    return Movie.create({ movie });
+  }
+}
 
 const add = async (title, callback) => {
-  const t = title.trim().split(' ').filter(x => x !== '').join('+');
-  const myUrl = 'http://www.omdbapi.com/';
-  const params = { apikey: process.env.API_KEY, t };
   try {
-    const movie = (await axios.get(myUrl, { params })).data;
-    if (movie.Response && movie.Response === 'False') {
-      throw new Error(movie.Error);
-    }
-    const movie2 = await Movie.findOne({ movie }).exec();
-    if (!movie2) {
-      callback(null, await Movie.create({ movie }));
-    } else {
-      throw new Error('Movie already exists');
-    }
+    const movie = await omdbapi.fetchFromApi(title);
+    callback(null, await saveMovie(movie));
   } catch (err) {
     callback(err);
   }
@@ -25,4 +26,4 @@ function getAll(callback) {
   Movie.find(callback);
 }
 
-module.exports = { add, getAll };
+module.exports = { add, getAll, movieExist };

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 function logErrors(err, _req, _res, next) {
   if (!process.env.NODE_ENV || process.env.NODE_ENV !== 'test') {
     console.error(err.stack);
