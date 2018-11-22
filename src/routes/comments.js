@@ -1,6 +1,10 @@
 const router = require('express').Router();
 const commentController = require('../controllers/comment');
-const myParsers = require('../myParsers');
+const {
+  moveIdToBody,
+  validateObjectId,
+  validateText,
+} = require('../middleware/myMiddleware');
 
 router.get('/', (req, res, next) => {
   commentController.getAll((err, data) => {
@@ -8,7 +12,7 @@ router.get('/', (req, res, next) => {
   });
 });
 
-router.post('/', myParsers.parseObjectId('movieId'), myParsers.parseText,
+router.post('/', validateObjectId('movieId'), validateText,
   ((req, res, next) => {
     commentController.add(req.body.movieId, req.body.text, (err, data) => {
       if (err) {
@@ -19,7 +23,7 @@ router.post('/', myParsers.parseObjectId('movieId'), myParsers.parseText,
     });
   }));
 
-router.get('/:id', myParsers.parseGetId, myParsers.parseObjectId());
+router.get('/:id', moveIdToBody, validateObjectId());
 router.get('/:id', (req, res, next) => {
   commentController.getByMovie(req.body.id, (err, data) => {
     if (err) {

@@ -1,21 +1,10 @@
 const mongoose = require('mongoose');
+const { parseTitle } = require('../helpers/parsers');
 
-// -- VALIDATORS
-function validateTitle(title) {
-  if (typeof title === 'string') {
-    const result = title.trim().toLowerCase();
-    if (result !== '') {
-      return [null, result];
-    }
-  }
-  return [new Error('Title value is not proper')];
-}
-
-// -- PARSERS
-function parseTitle(req, res, next) {
+function validateTitle(req, res, next) {
   let err;
   if (req.body.title) {
-    [err, req.body.title] = validateTitle(req.body.title);
+    [err, req.body.title] = parseTitle(req.body.title);
   } else {
     res.statusCode = 400;
     next(new Error('No title value'));
@@ -27,12 +16,12 @@ function parseTitle(req, res, next) {
   next();
 }
 
-function parseGetId(req, res, next) {
+function moveIdToBody(req, res, next) {
   req.body.id = req.params.id;
   next();
 }
 
-function parseObjectId(name = 'id') {
+function validateObjectId(name = 'id') {
   const { ObjectId } = mongoose.Types;
   return (req, res, next) => {
     const id = req.body[name];
@@ -44,7 +33,7 @@ function parseObjectId(name = 'id') {
   };
 }
 
-function parseText(req, res, next) {
+function validateText(req, res, next) {
   const { text } = req.body;
   if (!text || typeof text !== 'string' || text.trim() === '') {
     next(new Error('Comment is not notempty string'));
@@ -52,9 +41,17 @@ function parseText(req, res, next) {
   next();
 }
 
+function usePlainAsTitle(req, res, next) {
+  if (req.body && req.headers['content-type'] === 'text/plain') {
+    req.body = { title: req.body };
+  }
+  next();
+}
+
 module.exports = {
-  parseTitle,
-  parseObjectId,
-  parseText,
-  parseGetId,
+  validateTitle,
+  validateObjectId,
+  validateText,
+  moveIdToBody,
+  usePlainAsTitle,
 };

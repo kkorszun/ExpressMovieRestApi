@@ -4,8 +4,8 @@ const bodyParser = require('body-parser');
 
 require('dotenv').config();
 
-const errorHandlers = require('./errorHandlers');
-const db = require('./db');
+const { logErrors, errorHandler } = require('./handlers/errors');
+const db = require('./services/db');
 
 // --- EXPRESS
 const app = express();
@@ -26,8 +26,8 @@ app.use('/movies', require('./routes/movies'));
 app.use('/comments', require('./routes/comments'));
 
 // -- ERROR HANDLERS USAGE
-app.use(errorHandlers.logErrors);
-app.use(errorHandlers.errorHandler);
+app.use(logErrors);
+app.use(errorHandler);
 
 app.listen(port, () => console.log(`App listening on port ${port}!`));
 
