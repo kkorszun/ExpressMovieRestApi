@@ -1,8 +1,9 @@
 const router = require('express').Router();
 const commentController = require('../controllers/comment');
+const { formatObject } = require('../helpers/apiObjectFormatter');
 const {
-  moveIdToBody,
-  validateObjectId,
+  validateObjectIdBody,
+  validateObjectIdParam,
   validateText,
 } = require('../middleware/myMiddleware');
 
@@ -12,24 +13,24 @@ router.get('/', (req, res, next) => {
   });
 });
 
-router.post('/', validateObjectId('movieId'), validateText,
+router.post('/', validateObjectIdBody('movieId'), validateText,
   ((req, res, next) => {
     commentController.add(req.body.movieId, req.body.text, (err, data) => {
       if (err) {
         next(err);
       } else {
-        res.json(data);
+        res.json(formatObject(null, data, 200));
       }
     });
   }));
 
-router.get('/:id', moveIdToBody, validateObjectId());
+router.get('/:id', validateObjectIdParam);
 router.get('/:id', (req, res, next) => {
-  commentController.getByMovie(req.body.id, (err, data) => {
+  commentController.getByMovie(req.params.id, (err, data) => {
     if (err) {
       next(err);
     } else {
-      res.json(data);
+      res.json(formatObject(null, data, 200));
     }
   });
 });

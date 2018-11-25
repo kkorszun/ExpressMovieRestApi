@@ -23,7 +23,7 @@ describe('request.agent(app)', () => {
   });
 
   after(async () => {
-    await Movie.deleteMany().exec();
+    // await Movie.deleteMany().exec();
     await Comment.deleteMany().exec();
     // process.exit(0);
   });
@@ -55,7 +55,7 @@ describe('request.agent(app)', () => {
         .expect('Content-Type', /json/)
         .expect(200)
         .then((res) => {
-          assert(res.body.movie.Title, 'Hair');
+          assert(res.body.data.movie.Title, 'Hair');
           done();
         })
         .catch(err => done(err));
@@ -92,10 +92,10 @@ describe('request.agent(app)', () => {
   });
 
   describe('GET /comments/:id', () => {
-    it('bad request returns 400', (done) => {
+    it('bad request returns 404', (done) => {
       agent
         .get('/comments/aaa')
-        .expect(400, done);
+        .expect(404, done);
     });
   });
 
@@ -109,7 +109,7 @@ describe('request.agent(app)', () => {
         .expect('Content-Type', /json/)
         .expect(200)
         .then((res) => {
-          assert(res.body.text, 'test');
+          assert(res.body.data.text, 'test');
           done();
         })
         .catch(err => done(err));
@@ -125,7 +125,7 @@ describe('request.agent(app)', () => {
     });
   });
 
-  // should be changed (it's 500, should be 400)
+  // should be changed (it's 500, should be 200)
   describe('POST /comments/', () => {
     it('respond with 400  if movie id with does not exists', (done) => {
       request(app)

@@ -1,5 +1,4 @@
-const mongoose = require('mongoose');
-const { parseTitle } = require('../helpers/parsers');
+const { parseTitle, parseObjectId } = require('../helpers/parsers');
 
 function validateTitle(req, res, next) {
   let err;
@@ -16,20 +15,27 @@ function validateTitle(req, res, next) {
   next();
 }
 
-function moveIdToBody(req, res, next) {
-  req.body.id = req.params.id;
-  next();
+function validateObjectIdParam(req, res, next) {
+  parseObjectId(req.params.id, (err) => {
+    if (err) {
+      res.statusCode = 404;
+      next(err);
+    } else {
+      next();
+    }
+  });
 }
 
-function validateObjectId(name = 'id') {
-  const { ObjectId } = mongoose.Types;
+function validateObjectIdBody(name = 'id') {
   return (req, res, next) => {
     const id = req.body[name];
-    if (!id || (typeof id !== 'string') || !ObjectId.isValid(id)) {
-      res.statusCode = 400;
-      next(new Error(`Argument ${id} is not valid ObjectId`));
-    }
-    next();
+    parseObjectId(id, (err) => {
+      if (err) {
+        res.statusCode = 400;
+        next(err);
+      }
+      next();
+    });
   };
 }
 
@@ -50,8 +56,8 @@ function usePlainAsTitle(req, res, next) {
 
 module.exports = {
   validateTitle,
-  validateObjectId,
+  validateObjectIdBody,
   validateText,
-  moveIdToBody,
+  validateObjectIdParam,
   usePlainAsTitle,
 };

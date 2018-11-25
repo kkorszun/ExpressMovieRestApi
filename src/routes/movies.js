@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const movieController = require('../controllers/movie');
 const { validateTitle, usePlainAsTitle } = require('../middleware/myMiddleware');
+const { formatObject } = require('../helpers/apiObjectFormatter');
 
 router.get('/', (req, res, next) => movieController.getAll((err, data) => {
   if (err) { next(err); } else res.json(data);
@@ -13,7 +14,7 @@ router.post('/', (req, res, next) => {
     if (err) {
       next(err);
     } else {
-      res.json(data);
+      res.json(formatObject(null, data, 200));
     }
   });
 });
