@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node ./src/app",
     "pretest": "eslint --ignore-path .gitignore .",
-    "test": "cross-env NODE_ENV=test  mocha"
+    "test": "cross-env NODE_ENV=test  mocha --recursive \"./test/**/*.test.js\" --exit"
   },
   "repository": {
     "type": "git",
@@ -32,6 +32,7 @@
     "eslint": "^5.8.0",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-config-google": "^0.11.0",
+    "eslint-config-prettier": "^3.3.0",
     "eslint-plugin-import": "^2.14.0",
     "mocha": "^5.2.0",
     "supertest": "^3.3.0"

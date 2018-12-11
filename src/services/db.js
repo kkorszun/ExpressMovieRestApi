@@ -26,6 +26,7 @@ function buildDbAddress() {
 function dbConnect(callback) {
   const dbname = getDbName();
   const monogoAddress = buildDbAddress() || `mongodb://localhost/${dbname}`;
+  console.log('connecting ..');
   mongoose.connect(monogoAddress, { bufferCommands: false }).then(
     () => { callback(null); },
     (err) => { callback(err); },
@@ -45,13 +46,13 @@ mongoose.connection.on('connected', () => {
 
 mongoose.connection.on('disconnected', () => {
   console.log('INFO: Db Disconnected');
-  setTimeout(() => {
-    dbConnect(dbCb);
-  }, 60000);
 });
 
 mongoose.connection.on('error', () => { mongoose.disconnect(); });
 
 function connect() { dbConnect(dbCb); }
+function close() {
+  mongoose.disconnect();
+}
 
-module.exports = { mongoose, connect };
+module.exports = { connect, close };
