@@ -1,12 +1,14 @@
 const Movie = require('../models/movie');
 const omdbapi = require('../services/omdbapi');
 
-async function movieExist(movie) {
-  return (await Movie.findOne({ movie: { title: movie.title } }).exec()) !== null;
+async function movieExist(title) {
+  if (typeof title !== 'string') throw new Error('TypeError: title is not string');
+  const result = await Movie.findOne({ 'movie.Title': title }).exec();
+  return (result !== null);
 }
 
 async function saveMovie(movie) {
-  if (await movieExist(movie)) {
+  if (await movieExist(movie.Title)) {
     throw new Error('Movie already exists');
   } else {
     return Movie.create({ movie });
